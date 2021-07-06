@@ -1,4 +1,4 @@
-#include <Wire.h>
+#include <Wire.h> //  Knjižnici za I2c komunikacijo z LCD zasloni
 #include <LiquidCrystal_I2C.h>
 
 const int zagon = 2;
@@ -43,7 +43,7 @@ float avgv3;
 float v3;
 float a3;
 
-int cas_prebran1;  //  Boolean, če čas ob senzorju je ali ni prebran - sprva ni prebran.
+int cas_prebran1;  //  Boolean, če čas ob senzorju je ali ni prebran
 int cas_prebran2;
 int cas_prebran3;
 
@@ -98,10 +98,10 @@ void setup() {
   pinMode(pin_volt2, INPUT);
 
   razdalja1 = 0.05; //razdalje v metrih
-  razdalja2 = 0.11;
-  razdalja3 = 0.185;
+  razdalja2 = 0.065;
+  razdalja3 = 0.08;
 
-  timer_prozilec = 50000;  // čas proženja v mikrosekundah
+  timer_prozilec = 100000;  // čas proženja v mikrosekundah (ker se bo primerjal s časi izmerjenimi s funkcijo micros()
 
   lcd_volt.init();
   lcd_volt.backlight();
@@ -191,20 +191,19 @@ void loop() {
       }
       
       dt1 = ( cas1 - cas0 ) / 1000000; // Izračunaj razliko časov. Čas je v mikrosekundah, zato ga delimo z 1000000.
-      dt2 = ( cas2 - cas0 ) / 1000000;
-      dt3 = ( cas3 - cas0 ) / 1000000;
+      dt2 = ( cas2 - cas1 ) / 1000000;
+      dt3 = ( cas3 - cas2 ) / 1000000;
       
       avgv1 = razdalja1 / dt1;  //  Izračunaj povprečne hitrosti.
       avgv2 = razdalja2 / dt2;
       avgv3 = razdalja3 / dt3;
       
       v1 = 2*avgv1; //  Izračunaj hitrosti.
-      v2 = 2*avgv2;
-      v3 = 2*avgv3;
+      v2 = 2*avgv2 - v1;
+      v3 = 2*avgv3 - v2;
 
       a1 = v1 / dt1;  //  Izračunaj pospeške.
-      a2 = v2 / dt2;
-      a3 = v3 / dt3;
+      a3 = ( v3 - v2 ) / dt3;
 
       lcd_hitrost.clear();  //  Izpiši hitrosti.
       lcd_hitrost.setCursor(0,0);
@@ -216,7 +215,7 @@ void loop() {
       lcd_acc.setCursor(0,0);
       lcd_acc.print("a_1= " + String(a1, 6) + " m/s^2");
       lcd_acc.setCursor(0,1);
-      lcd_acc.print("a_2= " + String(a3, 6) + " m/s^2");
+      lcd_acc.print("a_3= " + String(a3, 6) + " m/s^2");
 
       lcd_volt.clear();
       lcd_volt.print("Procesiram...");
